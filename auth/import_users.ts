@@ -5,7 +5,7 @@ import * as StreamArray from "stream-json/streamers/StreamArray";
 
 const args = process.argv.slice(2);
 let filename;
-let client: Client;
+let client: typeof Client;
 
 const DEFAULT_BATCH_SIZE = 100;
 
@@ -172,27 +172,28 @@ function createUserHeader() {
     ) VALUES `;
 }
 function createUser(user: any, index: number): [string, any[]] {
+  const { lastSignInTime, creationTime } = user.metadata;
   const params = [
     user.email,
-    formatDate(user.metadata.creationTime),
+    user.emailVerified ? "NOW()" : null,
+    creationTime ? formatDate(creationTime) : null,
+    lastSignInTime ? formatDate(lastSignInTime) : null,
     getProviderString(user.providerData),
     JSON.stringify({ fbuser: user }),
   ];
 
   let paramNum = index * params.length;
-  const next = () => ++paramNum;
+  const next = () => `$${++paramNum}`;
 
   const sql = `(
         '00000000-0000-0000-0000-000000000000', /* instance_id */
         uuid_generate_v4(), /* id */
         'authenticated', /* aud character varying(255),*/
         'authenticated', /* role character varying(255),*/
-        $${next()}, /* email character varying(255),*/
+        ${next()}, /* email character varying(255),*/
         '', /* encrypted_password character varying(255),*/
-        ${
-          user.emailVerified ? "NOW()" : "null"
-        }, /* email_confirmed_at timestamp with time zone,*/
-        $${next()}::timestamptz, /* invited_at timestamp with time zone, */
+        ${next()}, /* email_confirmed_at timestamp with time zone,*/
+        ${next()}::timestamptz, /* invited_at timestamp with time zone, */
         '', /* confirmation_token character varying(255), */
         null, /* confirmation_sent_at timestamp with time zone, */
         '', /* recovery_token character varying(255), */
@@ -200,9 +201,9 @@ function createUser(user: any, index: number): [string, any[]] {
         '', /* email_change_token_new character varying(255), */
         '', /* email_change character varying(255), */
         null, /* email_change_sent_at timestamp with time zone, */
-        null, /* last_sign_in_at timestamp with time zone, */
-        $${next()}::JSONB, /* raw_app_meta_data jsonb,*/
-        $${next()}::JSONB, /* raw_user_meta_data jsonb,*/
+        ${next()}::timestamptz, /* last_sign_in_at timestamp with time zone, */
+        ${next()}::JSONB, /* raw_app_meta_data jsonb,*/
+        ${next()}::JSONB, /* raw_user_meta_data jsonb,*/
         false, /* is_super_admin boolean, */
         NOW(), /* created_at timestamp with time zone, */
         NOW(), /* updated_at timestamp with time zone, */
