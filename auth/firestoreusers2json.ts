@@ -29,13 +29,14 @@ async function main() {
     listUsers(filename, batchSize);
 }
 
+let count = 0;
 
 async function listUsers(
   filename: string,
   batchSize: number,
   nextPageToken?: string
 ) {
-    let count = 0;
+    
     admin.auth().listUsers(batchSize, nextPageToken)
     .then((usersFound: admin.auth.ListUsersResult) => {
         const users: admin.auth.UserRecord[] = usersFound.users;

@@ -70,11 +70,10 @@ function main() {
         });
     });
 }
+var count = 0;
 function listUsers(filename, batchSize, nextPageToken) {
     return __awaiter(this, void 0, void 0, function () {
-        var count;
         return __generator(this, function (_a) {
-            count = 0;
             admin.auth().listUsers(batchSize, nextPageToken)
                 .then(function (usersFound) {
                 var users = usersFound.users;
